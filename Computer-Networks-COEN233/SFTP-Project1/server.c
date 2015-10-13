@@ -9,8 +9,7 @@
 #define backlog 5
 #define BUFSIZE 5
 #define SIZE 100
-
-//server. Pass in the desired port number as the only argument upon execution.
+//SERVER
 int create_file(int);
 
 int main (int argc, char * argv[]){
@@ -41,11 +40,12 @@ int main (int argc, char * argv[]){
 	int fp = create_file(connection);
 	if (!fp) error("ERROR CREATE");
 	
+	// receive data and write to file
 	for(;;){
 		int nbytes = read(connection, buf, BUFSIZE);
 		buf[BUFSIZE] = '\0';
 		if (!nbytes) break;
-		printf("buffer = %s \n", buf);
+		//printf("buffer = %s \n", buf);
 		write(fp, buf, nbytes);
 	}
 	close(sockfd);	
@@ -60,17 +60,20 @@ int create_file(int connection){
 	
 	int nbytes = read(connection, buf, SIZE);
 	buf[nbytes] = '\0';
-	if (strncmp(buf,"STOR OLD", 8)){
-		write(connection, "- CREATE FAILED", 15);
+	if (strncmp(buf,"header", 6)){
+		printf("ERROR: Filename creation on server side\n");
+		write(connection, "Failed", 6);
 		return 0;
 	}
 	printf("before opening \n");
-	fp = open(buf+9, O_CREAT, 0640);
-	fp = open(buf+9, O_WRONLY);
+	fp = open(buf+7, O_CREAT, 0640);
+	fp = open(buf+7, O_WRONLY);
 	if (!fp){ 
-		write(connection, "- CREATE FAILED", 15);
+		printf("ERROR: Filename creation on server side\n");
+		write(connection, "Failed", 6);
 		return 0;
 	}	
-	write(connection, "+ CREATE SUCCESS", 16);
+	printf("File created successfully\n");
+	write(connection, "Success", 7);
 	return fp;
 }
